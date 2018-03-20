@@ -1,0 +1,6 @@
+[package]
+name = "colorfold"
+version = "0.1.0"
+authors = ["John Churay <thechurroextrodinare@gmail.com>"]
+
+[dependencies]
