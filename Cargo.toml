@@ -4,3 +4,13 @@ version = "0.1.0"
 authors = ["John Churay <thechurroextrodinare@gmail.com>"]
 
 [dependencies]
+
+# Rendering libraries
+gfx               = "0.16"
+glutin            = "0.11"
+gfx_window_glutin = "0.19"
+gfx_device_gl     = "0.14"
+gfx_text          = "*"
+
+# Getting images in
+image = "*"
