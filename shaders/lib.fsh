@@ -36,15 +36,27 @@ vec3 hsv2rgb(vec3 c)
 // == Conversions between the hsv cube and hsv in spherical notation ==
 // ====================================================================
 
+#define M_PI 3.1415926535897932384626433832795
+
 vec3 hsv2half_spherical(vec3 color)
 {
-  vec3 hue_sat = vec3(sin(color.y) * vec2(cos(color.x), sin(color.x)), cos(color.y));
+  float sat_angle = color.y * M_PI / 2;
+  float hue_angle = color.x * 2 * M_PI;
+  vec3 hue_sat = vec3(sin(sat_angle) * vec2(cos(hue_angle), sin(hue_angle)), cos(sat_angle));
   return vec3(color.z * hue_sat);
 }
 
 vec3 half_spherical2hsv(vec3 color)
 {
-  return vec3(atan(color.y, color.x), atan(length(color.xy), abs(color.z)), length(color));
+  float hue_angle = atan(color.y, color.x);
+  float sat_angle = atan(length(color.xy), abs(color.z));
+
+  if (hue_angle < 0.0)
+  {
+    hue_angle += 2 * M_PI;
+  }
+
+  return vec3(hue_angle / (2 * M_PI), sat_angle * 2 / M_PI, length(color));
 }
 
 // ====================================================================
@@ -133,13 +145,22 @@ vec3 interp(vec3 start, vec3 end, float percent)
 // ======= as part of the sum.
 
 /**
+ * Rotate the input vector by the given rotation
+ */
+vec4 point_point(vec3 in_vec, vec3 start, vec4 rotation)
+{
+  vec3 dist_vec = start - in_vec;
+  return vec4(rotate_by_quat(in_vec, rotation), dot(dist_vec, dist_vec));
+}
+
+/**
  * Rotate the input vector by the rotation between start and end
  */
 vec4 single_point_rotation(vec3 in_vec, vec3 start, vec3 end)
 {
   vec4 rotation = get_rotation_quat(start, end);
-  vec3 disp_vec = start - in_vec;
-  return vec4(rotate_by_quat(in_vec, rotation), dot(disp_vec, disp_vec));
+  vec3 dist_vec = start - in_vec;
+  return vec4(rotate_by_quat(in_vec, rotation), dot(dist_vec, dist_vec));
 }
 
 // === Scaling
@@ -149,7 +170,7 @@ vec4 single_point_rotation(vec3 in_vec, vec3 start, vec3 end)
 /**
  * Scale the input vector by the given ratio.
  */
-vec4 clamp_scaling(vec4 in_vec, float ratio)
+vec4 RatioClamp(vec4 in_vec, float ratio)
 {
   if (in_vec.w < -Epsilon) return in_vec;
 
@@ -167,7 +188,7 @@ vec4 clamp_scaling(vec4 in_vec, float ratio)
  * Note: This scheme will not necessarily map a vector of length
  * start_mid to a vector of length end_mid.
  */
-vec4 bezier_scaling(vec4 in_vec, float start_mid, float end_mid)
+vec4 BezierLoose(vec4 in_vec, float start_mid, float end_mid)
 {
   if (in_vec.w < 0) return in_vec;
 
@@ -178,11 +199,3 @@ vec4 bezier_scaling(vec4 in_vec, float start_mid, float end_mid)
                          mix(end_mid, 1, percent), percent);
   return vec4(new_length / in_len * in_vec.xyz, in_vec.w);
 }
-
-void main()
-{
-  // Calculate Texel Index to remove filtering, get color of the image and
-  // then translate it into hsv spherical coordinates
-  ivec2 texel_index = ivec2(v_uv_pos * size);
-  vec4 orig_color = texelFetch(img, texel_index, 0);
-  vec3 color_vec = hsv2half_spherical(rgb2hsv(orig_color.xyz));

@@ -36,15 +36,27 @@ vec3 hsv2rgb(vec3 c)
 // == Conversions between the hsv cube and hsv in spherical notation ==
 // ====================================================================
 
+#define M_PI 3.1415926535897932384626433832795
+
 vec3 hsv2half_spherical(vec3 color)
 {
-  vec3 hue_sat = vec3(sin(color.y) * vec2(cos(color.x), sin(color.x)), cos(color.y));
+  float sat_angle = color.y * M_PI / 2;
+  float hue_angle = color.x * 2 * M_PI;
+  vec3 hue_sat = vec3(sin(sat_angle) * vec2(cos(hue_angle), sin(hue_angle)), cos(sat_angle));
   return vec3(color.z * hue_sat);
 }
 
 vec3 half_spherical2hsv(vec3 color)
 {
-  return vec3(atan(color.y, color.x), atan(length(color.xy), abs(color.z)), length(color));
+  float hue_angle = atan(color.y, color.x);
+  float sat_angle = atan(length(color.xy), abs(color.z));
+
+  if (hue_angle < 0.0)
+  {
+    hue_angle += 2 * M_PI;
+  }
+
+  return vec3(hue_angle / (2 * M_PI), sat_angle * 2 / M_PI, length(color));
 }
 
 // ====================================================================
@@ -188,8 +200,8 @@ void main()
   vec3 color_vec = hsv2half_spherical(rgb2hsv(orig_color.xyz));
 
   // Shift invert the colors
-  vec4 out1 = clamp_scaling(single_point_rotation(color_vec, vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0)), 0.75);
-  vec4 out2 = clamp_scaling(single_point_rotation(color_vec, vec3(0.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0)), 1);
+  vec4 out1 = clamp_scaling(single_point_rotation(color_vec, vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0)), 1);
+  vec4 out2 = clamp_scaling(single_point_rotation(color_vec, vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0)), 1);
 
   vec3 out_vec = vec3(0);
 
@@ -209,6 +221,8 @@ void main()
 
     out_vec = weight_modifier * (inv_weight1 * out1.xyz + inv_weight2 * out2.xyz);
   }
+
+  out_vec = out1.xyz;
 
   // Convert the out_color back into rgb. Maintain alpha.
   vec4 color_out = vec4(hsv2rgb(half_spherical2hsv(out_vec)),
