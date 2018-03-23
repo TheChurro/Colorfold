@@ -3,14 +3,37 @@ name = "colorfold"
 version = "0.1.0"
 authors = ["John Churay <thechurroextrodinare@gmail.com>"]
 
+[features]
+default = []
+metal = ["gfx-backend-metal"]
+dx12 = ["gfx-backend-dx12"]
+vulkan = ["gfx-backend-vulkan"]
+unstable = []
+
+[[bin]]
+name = "colorfold"
+path = "src/main.rs"
+
 [dependencies]
+env_logger = "0.5"
+image = "0.15"
+log = "0.4"
+winit = "0.10"
+gfx-hal = { path = "gfx/src/hal", version = "0.1" }
+glsl-to-spirv = "0.1.4"
 
-# Rendering libraries
-gfx               = "0.16"
-glutin            = "0.11"
-gfx_window_glutin = "0.19"
-gfx_device_gl     = "0.14"
-gfx_text          = "*"
+[dependencies.gfx-backend-vulkan]
+path = "gfx/src/backend/vulkan"
+version = "0.1"
+#features = ["glsl-to-spirv"]
+optional = true
 
-# Getting images in
-image = "*"
+[target.'cfg(target_os = "macos")'.dependencies.gfx-backend-metal]
+path = "gfx/src/backend/metal"
+version = "0.1"
+optional = true
+
+[target.'cfg(windows)'.dependencies.gfx-backend-dx12]
+path = "gfx/src/backend/dx12"
+version = "0.1"
+optional = true

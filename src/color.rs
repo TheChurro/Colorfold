@@ -56,7 +56,7 @@ impl Color
             }
             else if c_max == r
             {
-                (((g - b) / delta) % 6.0) / 6.0
+                (((g - b) / delta + 6.0) % 6.0) / 6.0
             }
             else if c_max == g
             {
@@ -103,13 +103,21 @@ impl Color
             {
                 let axis1 = cross(start, (0.0, 1.0, 0.0));
                 let axis2 = cross(start, (1.0, 0.0, 0.0));
-                if dot(axis1, axis1) <= dot(axis2, axis2)
+                if dot(axis1, axis1) <= 10.0 * EPSILON
                 {
                     axis = axis2;
                 }
-                else
+                else if dot(axis2, axis2) <= 10.0 * EPSILON
                 {
                     axis = axis1;
+                }
+                else if dot(axis1, (0.0, 0.0, 1.0)) <= dot(axis2, (0.0, 0.0, 1.0))
+                {
+                    axis = axis1;
+                }
+                else
+                {
+                    axis = axis2;
                 }
             }
 

@@ -1,2 +1,2 @@
-cmd:  cargo build && cargo run
+cmd:  cargo build --features metal && cargo run --features metal
 name: Build and Run

@@ -1,0 +1,5 @@
+
+void main()
+{
+  // Get [r, g, b, a] values of input image into [0.0, 1.0] range
+  uint index = gl_GlobalInvocationID.x;

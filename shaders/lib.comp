@@ -1,14 +1,11 @@
-#version 150 core
+#version 450
 
-uniform sampler2D img;
-uniform img_dims
-{
-  ivec2 size;
+layout(local_size_x = 1) in;
+
+// Input image
+layout(set = 0, binding = 0) buffer Images {
+    uint[] in_colors0;
 };
-
-in vec2  v_uv_pos;
-out vec4 Target0;
-
 // Color conversion code from
 // http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
 
@@ -156,7 +153,7 @@ vec4 point_point(vec3 in_vec, vec3 start, vec4 rotation)
 /**
  * Rotate the input vector by the rotation between start and end
  */
-vec4 single_point_rotation(vec3 in_vec, vec3 start, vec3 end)
+vec4 point_point_calc_rot(vec3 in_vec, vec3 start, vec3 end)
 {
   vec4 rotation = get_rotation_quat(start, end);
   vec3 dist_vec = start - in_vec;
@@ -165,15 +162,12 @@ vec4 single_point_rotation(vec3 in_vec, vec3 start, vec3 end)
 
 // === Scaling
 // ===== All functions return (scaled vector with norm <= 1, weight)
-// ======= If weight = -1 then scaling may not occur
 
 /**
  * Scale the input vector by the given ratio.
  */
 vec4 RatioClamp(vec4 in_vec, float ratio)
 {
-  if (in_vec.w < -Epsilon) return in_vec;
-
   vec3 scaled = in_vec.xyz * ratio;
   if (dot(scaled, scaled) > 1)
   {
@@ -190,8 +184,6 @@ vec4 RatioClamp(vec4 in_vec, float ratio)
  */
 vec4 BezierLoose(vec4 in_vec, float start_mid, float end_mid)
 {
-  if (in_vec.w < 0) return in_vec;
-
   float in_len     = length(in_vec.xyz);
   float percent    = mix(mix(0, start_mid, in_len),
                          mix(start_mid, 1, in_len), in_len);
