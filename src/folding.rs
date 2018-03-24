@@ -12,35 +12,22 @@ use hal::{queue, pso, memory, buffer, pool, command};
 
 use back;
 
-use filters::Palette;
+use filters::Compute as ComputeShader;
 use imaging::Image;
 use std::collections::HashMap;
 
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 /**
- * A struct which uniquely describes how to build a computation stage.
- * This will contain the input image names and the output image names as well as the
- * intended transformation of those images.
- */
-#[derive(Clone, Serialize, Deserialize)]
-pub struct StageDesc
-{
-    pub input_ids  : Vec<String>,
-    pub output_id  : String,
-    pub palette    : Palette,
-}
-
-/**
  * Struct which holds the compute shading state
  */
 pub struct FoldingMachine<B : Backend, C>
 {
-    stages  : Vec<StageDesc>,
     memory_properties : hal::MemoryProperties,
     device  : B::Device,
     queue_group : hal::QueueGroup<B, C>,
 
+    stages  : Vec<ComputeShader>,
     images  : HashMap<String, Image>
 }
 
@@ -69,7 +56,7 @@ fn create_buffer<B: Backend>(device: &mut B::Device, memory_types: &[hal::Memory
 
 impl<B : Backend, C> FoldingMachine<B, C>
 {
-    pub fn new(image_vec : Vec<(String, String)>, stages : Vec<StageDesc>)
+    pub fn new(image_vec : Vec<(String, String)>, stages : Vec<ComputeShader>)
                     -> FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute>
     {
         let instance = back::Instance::create("gfx-rs compute", 1);
@@ -90,10 +77,10 @@ impl<B : Backend, C> FoldingMachine<B, C>
             images.insert(name.clone(), Image::new(name.clone(), location.clone()));
         }
 
-        FoldingMachine { stages, memory_properties, device, queue_group, images }
+        FoldingMachine { memory_properties, device, queue_group, stages, images }
     }
 
-    pub fn from_map(images : HashMap<String, Image>, stages : Vec<StageDesc>)
+    pub fn from_map(images : HashMap<String, Image>, stages : Vec<ComputeShader>)
                     -> FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute>
     {
         let instance = back::Instance::create("gfx-rs compute", 1);
@@ -124,22 +111,17 @@ impl<B : Backend, C> FoldingMachine<B, C>
         let mut image_data : Vec<Vec<u32>> = Vec::new();
         let mut dim = None;
         let mut img_len = 0;
-        let out_name = stage.output_id.clone();
+        let out_name = stage.get_file();
 
-        let mut entry_string = format!(
+        let mut entry_string = String::from(
 "void main()
-{{
+{
   uint index = gl_GlobalInvocationID.x;
-  float total = 0;
-  vec3  total_vec = vec3(0);
-  int   num_zeros = 0;
-  vec3  num_zeros_vec = vec3(0);
-  vec3  {}_vec = vec3(0);
-",
-                                        out_name);
+");
 
+        let img_sources = stage.get_required_sources();
         // Gather all images into their data arrays and check that all images have correct size.
-        for (i, name) in stage.input_ids.iter().enumerate()
+        for (i, name) in img_sources.iter().enumerate()
         {
             // Load the image into memory
             let image = self.images.get_mut(name).unwrap();
@@ -170,9 +152,11 @@ impl<B : Backend, C> FoldingMachine<B, C>
             // Create the shader string which loads the hsv vector for this image at a given pixel
             entry_string.push_str(format!(
 "  uint {name}_value = in_colors0[index + {offset}];
-  vec4 {name}_color =  vec4(uvec4({name}_value & 255, ({name}_value >> 8) & 255,
-                                   ({name}_value >> 16) & 255, ({name}_value >> 24) & 255))/ 255.0;
-  vec3 {name}_vec = hsv2half_spherical(rgb2hsv({name}_color.xyz));",
+  uint {name}_alpha = {name}_value & (255 << 24);
+  vec4 {name}_rgb =  vec4(uvec3({name}_value & 255, ({name}_value >> 8) & 255,
+                                   ({name}_value >> 16) & 255), 0)/ 255.0;
+  vec4 {name}_hsv = vec4(rgb2hsv({name}_rgb.xyz), 0);
+  vec4 {name} = vec4(hsv2half_spherical({name}_hsv.xyz), 0);",
                                      name=name, offset=(i as u32)*img_len).as_str());
         }
 
@@ -180,34 +164,30 @@ impl<B : Backend, C> FoldingMachine<B, C>
         // == Build the shader strings and the output line                                       ==
         // ========================================================================================
 
-        let start_name = stage.input_ids[0].clone();
-        let middle_string = stage.palette.shader(format!("{}_vec", start_name),
-                                                 format!("{}_vec", out_name),
-                                                 "total".to_owned(),      "num_zeros".to_owned());
+        let start_name = img_sources.iter().next().unwrap().clone();
+        let mut compute_shaders = stage.get_shader();
+        let compute_call = compute_shaders.remove(0);
         let end_string = format!(
 "  // Convert the out_color back into rgb. Maintain alpha.
-  vec4 color_out = vec4(hsv2rgb(half_spherical2hsv({}_vec)),
-                      {in_name}_color.w);
-  uvec4 out_components = uvec4(255 * color_out);
+  vec3 color_out = vec3(hsv2rgb(half_spherical2hsv({compute}.xyz)));
+  uvec3 out_components = uvec3(255 * color_out);
   in_colors0[index] = out_components.x         | (out_components.y << 8) |
-                      (out_components.z << 16) | (out_components.w << 24);
+                      (out_components.z << 16) | {in_name}_alpha;
 }}
 ",
-            out_name=out_name, in_name=start_name
+            in_name=start_name, compute=compute_call
         );
+
+        // Bind all compute functions with the main function
+        let mut shading_str = entry_string + &end_string;
+        for compute_shader in compute_shaders
+        {
+            shading_str = compute_shader + &shading_str;
+        }
 
         use std::str;
         let shader_string = String::from(str::from_utf8(include_bytes!("../shaders/lib.comp")).unwrap()) +
-                            &entry_string + &middle_string + &end_string;
-
-        // Compile the shader now that we have fully created it.
-
-        {
-            use std::fs::File;
-            use std::io::prelude::*;
-            let mut out_shader = File::create("shaders/tmp.comp").expect("Could not save shader");
-            out_shader.write_all(shader_string.as_bytes());
-        }
+                            &shading_str;
 
         use glsl_to_spirv::ShaderType;
         use glsl_to_spirv;
@@ -363,7 +343,7 @@ impl<B : Backend, C> FoldingMachine<B, C>
         {
             let reader = self.device.acquire_mapping_reader::<u32>(&staging_memory, 0..stride * img_len as u64).unwrap();
             let new_image_data = reader.into_iter().map(|n| *n).collect::<Vec<u32>>();
-            let mut out_image = self.images.get_mut(&stage.output_id).unwrap();
+            let mut out_image = self.images.get_mut(&out_name).unwrap();
             out_image.save_u32_vec(new_image_data, width, height).expect("Could not save");
             self.device.release_mapping_reader(reader);
         }
@@ -394,7 +374,7 @@ impl<B : Backend, C> FoldingMachine<B, C>
 // ================================================================================================
 #[derive(Serialize, Deserialize)]
 struct SerializableFoldingMachine {
-    stages  : Vec<StageDesc>,
+    stages  : Vec<ComputeShader>,
     images  : HashMap<String, Image>
 }
 

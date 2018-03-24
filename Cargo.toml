@@ -21,6 +21,7 @@ log = "0.4"
 winit = "0.10"
 gfx-hal = { path = "gfx/src/hal", version = "0.1" }
 glsl-to-spirv = "0.1.4"
+linked_hash_set = "0.1.2"
 
 # Parsing
 serde = "1.0.34"

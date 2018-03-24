@@ -1,0 +1,85 @@
+{
+  "stages": [
+    {
+      "Compute": {
+        "name": "OUT",
+        "operations": [
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 255,
+                  "green": 0,
+                  "blue": 0
+                }
+              },
+              "end_point": {
+                "Point": {
+                  "red": 127,
+                  "green": 255,
+                  "blue": 0
+                }
+              },
+              "source": "IN",
+              "rescale": "RatioClamp"
+            }
+          },
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 255,
+                  "green": 0,
+                  "blue": 0
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "Line": {
+                      "start": {
+                        "Point": {
+                          "red": 0,
+                          "green": 0,
+                          "blue": 0
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "red": 255,
+                          "green": 255,
+                          "blue": 255
+                        }
+                      },
+                      "start_time": 0.0,
+                      "end_time": 0.0
+                    }
+                  },
+                  {
+                    "ColorProp": {
+                      "source": "IN",
+                      "property": "Value"
+                    }
+                  }
+                ]
+              },
+              "source": "IN",
+              "rescale": "RatioClamp"
+            }
+          }
+        ],
+        "sum_type": "InvWeighted"
+      }
+    }
+  ],
+  "images": {
+    "IN": {
+      "name": "IN",
+      "location": "resources/Test.jpg"
+    },
+    "OUT": {
+      "name": "OUT",
+      "location": "resources/TestOutGeom.png"
+    }
+  }
+}

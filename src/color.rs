@@ -8,7 +8,7 @@ use serde::{Serialize, Serializer, Deserialize, Deserializer};
 #[derive(Clone)]
 pub struct Color(pub u8, pub u8, pub u8);
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum ColorProperties
 {
     Hue,
@@ -17,6 +17,37 @@ pub enum ColorProperties
     Red,
     Green,
     Blue
+}
+
+impl ColorProperties
+{
+    pub fn suffix(&self) -> &'static str
+    {
+        use color::ColorProperties::*;
+        match self
+        {
+            &Hue        => "hsv.x",
+            &Value      => "hsv.y",
+            &Saturation => "hsv.z",
+            &Red   => "rgb.x",
+            &Green => "rgb.y",
+            &Blue  => "rgb.z",
+        }
+    }
+
+    pub fn get_color_space(&self) -> &'static str
+    {
+        use color::ColorProperties::*;
+        match self
+        {
+            &Hue        => "hsv",
+            &Value      => "hsv",
+            &Saturation => "hsv",
+            &Red   => "rgb",
+            &Green => "rgb",
+            &Blue  => "rgb",
+        }
+    }
 }
 
 fn max(a:f32, b:f32) -> f32

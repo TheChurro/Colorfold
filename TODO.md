@@ -1,23 +1,31 @@
 # Completed Features
 
 - Image loading complete
-- Manual Implementation of single image palettes
-  - Color to color rotations
-  - Supports two types of scaling
+- JSON format for filters
+- Multi-Image filtering enabled
+- Renders to output file
+- Multiple 1-D mappings available
 
 # TODO List
 
-- Filter File Format and Parsing
-  - Number of images and their locations
-  - Number of mappings and their definitions
-- Support two+ image filtering
+- Better README
+- Testing
+  - Good examples that can be posted online
+  - Showcase of 2-image filtering capabilities.
+- Better support for scaling
+  - Ratio clamp doesn't work well with black (leaves a hole)
 - More filter types
-  - Circle to circle mapping
-  - Avoid a color mapping
-  - Line to line mapping
-  - Using second image to interpolate between mappings
-- Rendering to output file (add to file format)
-  - Feature is hard, requires library change
-  - Maybe updating to the new gfx-rs would work and using compute shaders...
-- Color smoothing techniques (fixes artifacts in jpgs and the like)
-- UI (So that we don't have to specify a file with little meaning forever)
+  - Need to add n-D surfaces
+- More rotation and compute objects
+  - Add centered rotations
+  - Translations
+  - Density shifters
+- Iterated compute stages
+- UI
+  - Graph editor for compute stages
+  - Option to see output at any given compute stage
+  - Visualization of how color space is transformed
+- Additional color spaces
+  - HSL
+  - RGB (and other Cube-like spaces)
+  - L\*a\*b\*

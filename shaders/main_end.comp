@@ -1,8 +1,0 @@
-  // Convert the out_color back into rgb. Maintain alpha.
-  vec4 color_out = vec4(hsv2rgb(half_spherical2hsv(out_vec)),
-                      color_vec0.w);
-  uvec4 out_components = uvec4(255 * color_out);
-  in_colors0[index] = out_components.x         | (out_components.y << 8) |
-                      (out_components.z << 16) | (out_components.w << 24);
-
-}
