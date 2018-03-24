@@ -35,7 +35,8 @@ fn create_buffer<B: Backend>(device: &mut B::Device, memory_types: &[hal::Memory
                              properties: memory::Properties, usage: buffer::Usage,
                              stride: u64, len: u64) -> (B::Memory, B::Buffer)
 {
-    let buffer = device.create_buffer(stride * len, usage).unwrap();
+    let buffer = device.create_buffer(stride * len, usage)
+                            .expect("Could not create GPU buffer");
     let requirements = device.get_buffer_requirements(&buffer);
 
     let ty = memory_types
@@ -45,7 +46,7 @@ fn create_buffer<B: Backend>(device: &mut B::Device, memory_types: &[hal::Memory
             requirements.type_mask & (1 << id) != 0 &&
             memory_type.properties.contains(properties)
         })
-        .unwrap()
+        .expect("Could not find valid memory type")
         .into();
 
     let memory = device.allocate_memory(ty, requirements.size).unwrap();
@@ -77,6 +78,7 @@ impl<B : Backend, C> FoldingMachine<B, C>
             images.insert(name.clone(), Image::new(name.clone(), location.clone()));
         }
 
+        // TODO:Ensure that stages does not have any color sources outside of images
         FoldingMachine { memory_properties, device, queue_group, stages, images }
     }
 
@@ -94,7 +96,7 @@ impl<B : Backend, C> FoldingMachine<B, C>
         let memory_properties = adapter.physical_device.memory_properties();
         let (device, queue_group) = adapter.open_with::<_, Compute>(1, |_family| true)
                                                 .unwrap();
-
+        // TODO:Ensure that stages does not have any color sources outside of images
         FoldingMachine { stages, memory_properties, device, queue_group, images }
     }
 

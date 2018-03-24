@@ -1,0 +1,370 @@
+{
+  "stages": [
+    {
+      "Compute": {
+        "name": "Out",
+        "operations": [
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 184,
+                  "green": 94,
+                  "blue": 50
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "Arc": {
+                      "start": {
+                        "Point": {
+                          "red": 216,
+                          "green": 158,
+                          "blue": 69
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "red": 131,
+                          "green": 53,
+                          "blue": 27
+                        }
+                      },
+                      "start_time": 0.88,
+                      "end_time": 0.388
+                    }
+                  },
+                  {
+                    "ColorProp": {
+                      "source": "Light",
+                      "property": "Value"
+                    }
+                  }
+                ]
+              },
+              "source": "Color",
+              "rescale": "RatioClamp"
+            }
+          },
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 102,
+                  "green": 80,
+                  "blue": 72
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "Arc": {
+                      "start": {
+                        "Point": {
+                          "red": 203,
+                          "green": 129,
+                          "blue": 65
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "red": 28,
+                          "green": 5,
+                          "blue": 5
+                        }
+                      },
+                      "start_time": 0.949,
+                      "end_time": 0.0
+                    }
+                  },
+                  {
+                    "ColorProp": {
+                      "source": "Light",
+                      "property": "Value"
+                    }
+                  }
+                ]
+              },
+              "source": "Color",
+              "rescale": "RatioClamp"
+            }
+          },
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 180,
+                  "green": 68,
+                  "blue": 41
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "ArcSegment": {
+                      "start": {
+                        "Point": {
+                          "red": 186,
+                          "green": 90,
+                          "blue": 43
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "red": 52,
+                          "green": 8,
+                          "blue": 4
+                        }
+                      },
+                      "start_time": 0.71,
+                      "end_time": 0.0
+                    }
+                  },
+                  {
+                    "ColorProp": {
+                      "source": "Light",
+                      "property": "Value"
+                    }
+                  }
+                ]
+              },
+              "source": "Color",
+              "rescale": "RatioClamp"
+            }
+          },
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 180,
+                  "green": 68,
+                  "blue": 41
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "ArcSegment": {
+                      "start": {
+                        "Point": {
+                          "red": 186,
+                          "green": 90,
+                          "blue": 43
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "red": 200,
+                          "green": 166,
+                          "blue": 54
+                        }
+                      },
+                      "start_time": 0.711,
+                      "end_time": 1.0
+                    }
+                  },
+                  {
+                    "ColorProp": {
+                      "source": "Light",
+                      "property": "Value"
+                    }
+                  }
+                ]
+              },
+              "source": "Color",
+              "rescale": "RatioClamp"
+            }
+          },
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 17,
+                  "green": 67,
+                  "blue": 10
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "Arc": {
+                      "start": {
+                        "Point": {
+                          "red": 55,
+                          "green": 11,
+                          "blue": 5
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "red": 112,
+                          "green": 98,
+                          "blue": 36
+                        }
+                      },
+                      "start_time": 0.019,
+                      "end_time": 0.589
+                    }
+                  },
+                  {
+                    "ColorProp": {
+                      "source": "Light",
+                      "property": "Value"
+                    }
+                  }
+                ]
+              },
+              "source": "Color",
+              "rescale": "RatioClamp"
+            }
+          },
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 9,
+                  "green": 9,
+                  "blue": 13
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "ArcSegment": {
+                      "start": {
+                        "Point": {
+                          "red": 223,
+                          "green": 197,
+                          "blue": 143
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "red": 51,
+                          "green": 23,
+                          "blue": 12
+                        }
+                      },
+                      "start_time": 1.0,
+                      "end_time": 0.3411764705882353
+                    }
+                  },
+                  {
+                    "ColorProp": {
+                      "source": "Light",
+                      "property": "Value"
+                    }
+                  }
+                ]
+              },
+              "source": "Color",
+              "rescale": "RatioClamp"
+            }
+          },
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 9,
+                  "green": 9,
+                  "blue": 13
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "ArcSegment": {
+                      "start": {
+                        "Point": {
+                          "red": 0,
+                          "green": 0,
+                          "blue": 0
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "red": 51,
+                          "green": 23,
+                          "blue": 12
+                        }
+                      },
+                      "start_time": 0.0,
+                      "end_time": 0.3411764705882353
+                    }
+                  },
+                  {
+                    "ColorProp": {
+                      "source": "Light",
+                      "property": "Value"
+                    }
+                  }
+                ]
+              },
+              "source": "Color",
+              "rescale": "BezierLoose"
+            }
+          },
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "red": 255,
+                  "green": 0,
+                  "blue": 0
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "Arc": {
+                      "start": {
+                        "Point": {
+                          "red": 100,
+                          "green": 25,
+                          "blue": 25
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "red": 199,
+                          "green": 166,
+                          "blue": 55
+                        }
+                      },
+                      "start_time": 0.0,
+                      "end_time": 1.0
+                    }
+                  },
+                  {
+                    "ColorProp": {
+                      "source": "Light",
+                      "property": "Value"
+                    }
+                  }
+                ]
+              },
+              "source": "Color",
+              "rescale": "RatioClamp"
+            }
+          }
+        ],
+        "sum_type": "InvWeighted"
+      }
+    }
+  ],
+  "images": {
+    "Color": {
+      "name": "Color",
+      "location": "resources/Test0/Test0.Color.png"
+    },
+    "Light": {
+      "name": "Light",
+      "location": "resources/Test0/Test0.Light.png"
+    },
+    "Out": {
+      "name": "Out",
+      "location": "resources/Test0/Test0.Out.png"
+    }
+  }
+}

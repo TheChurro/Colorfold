@@ -41,9 +41,26 @@ fn main()
     for arg in env::args().skip(1)
     {
         println!("Running folding machine at {}", arg);
-        let mut input = File::open(arg).unwrap();
-        let mut folder : FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute> = serde_json::from_reader(input).unwrap();
-        folder.compute_stage(0usize).expect("Could not compute");
+        if let Ok(mut input) = File::open(arg)
+        {
+            match serde_json::from_reader(input)
+            {
+                Ok(folder)  =>
+                {
+                    let mut folder : FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute> = folder;
+                    match folder.compute_stage(0usize)
+                    {
+                        Ok(()) => { println!("Completed!"); },
+                        Err(x) => { println!("Compute Err: {}", x); }
+                    }
+                },
+                Err(x) => { println!("Error: Malformed input file! {}", x); }
+            }
+        }
+        else
+        {
+            println!("Error: Could not open file!");
+        }
     }
 }
 

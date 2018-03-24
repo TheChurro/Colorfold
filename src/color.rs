@@ -27,8 +27,8 @@ impl ColorProperties
         match self
         {
             &Hue        => "hsv.x",
-            &Value      => "hsv.y",
-            &Saturation => "hsv.z",
+            &Saturation => "hsv.y",
+            &Value      => "hsv.z",
             &Red   => "rgb.x",
             &Green => "rgb.y",
             &Blue  => "rgb.z",
