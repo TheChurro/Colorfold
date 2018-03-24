@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["John Churay <thechurroextrodinare@gmail.com>"]
 
 [features]
-default = []
+default = ["gfx-backend-metal"]
 metal = ["gfx-backend-metal"]
 dx12 = ["gfx-backend-dx12"]
 vulkan = ["gfx-backend-vulkan"]
@@ -21,6 +21,11 @@ log = "0.4"
 winit = "0.10"
 gfx-hal = { path = "gfx/src/hal", version = "0.1" }
 glsl-to-spirv = "0.1.4"
+
+# Parsing
+serde = "1.0.34"
+serde_derive = "1.0.34"
+serde_json = "1.0.13"
 
 [dependencies.gfx-backend-vulkan]
 path = "gfx/src/backend/vulkan"

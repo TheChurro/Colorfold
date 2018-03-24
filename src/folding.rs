@@ -16,11 +16,14 @@ use filters::Palette;
 use imaging::Image;
 use std::collections::HashMap;
 
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
+
 /**
  * A struct which uniquely describes how to build a computation stage.
  * This will contain the input image names and the output image names as well as the
  * intended transformation of those images.
  */
+#[derive(Clone, Serialize, Deserialize)]
 pub struct StageDesc
 {
     pub input_ids  : Vec<String>,
@@ -86,6 +89,24 @@ impl<B : Backend, C> FoldingMachine<B, C>
         {
             images.insert(name.clone(), Image::new(name.clone(), location.clone()));
         }
+
+        FoldingMachine { stages, memory_properties, device, queue_group, images }
+    }
+
+    pub fn from_map(images : HashMap<String, Image>, stages : Vec<StageDesc>)
+                    -> FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute>
+    {
+        let instance = back::Instance::create("gfx-rs compute", 1);
+
+        let adapter = instance.enumerate_adapters().into_iter()
+                                .find(|a| a.queue_families.iter()
+                                    .any(|family| family.supports_compute()))
+                                        .expect("Failed to find GPU with compute support.");
+
+
+        let memory_properties = adapter.physical_device.memory_properties();
+        let (device, queue_group) = adapter.open_with::<_, Compute>(1, |_family| true)
+                                                .unwrap();
 
         FoldingMachine { stages, memory_properties, device, queue_group, images }
     }
@@ -365,5 +386,31 @@ impl<B : Backend, C> FoldingMachine<B, C>
 
         Ok(())
 
+    }
+}
+
+// ================================================================================================
+// == Serde Serialization for parsing input files.                                               ==
+// ================================================================================================
+#[derive(Serialize, Deserialize)]
+struct SerializableFoldingMachine {
+    stages  : Vec<StageDesc>,
+    images  : HashMap<String, Image>
+}
+
+impl Serialize for FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        SerializableFoldingMachine { stages: self.stages.clone(), images: self.images.clone() }.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        Deserialize::deserialize(deserializer)
+            .map(|SerializableFoldingMachine { stages, images }| <FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute>>::from_map(images, stages))
     }
 }

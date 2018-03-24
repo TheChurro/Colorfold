@@ -1,6 +1,11 @@
 
 use color::Color;
 
+use serde;
+use serde_json;
+use serde_derive;
+
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Control
 {
     Point(Color),
@@ -23,6 +28,7 @@ impl Control
     }
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Merger
 {
     ValueLine(Control, Control),
@@ -33,6 +39,7 @@ pub enum Merger
     },
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub enum Rotation
 {
     SingleSingle(Control, Control),
@@ -85,6 +92,7 @@ impl Rotation
     }
 }
 
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Scale
 {
     RatioClamp,
@@ -130,6 +138,7 @@ impl Scale
     }
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Palette
 {
     pub filters : Vec<(Rotation, Scale)>,

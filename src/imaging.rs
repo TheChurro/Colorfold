@@ -4,6 +4,8 @@ use std::io;
 
 use image::{ImageBuffer, Rgba, ImageError};
 
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
+
 pub struct Image
 {
     pub data      : Option<ImageBuffer<Rgba<u8>, Vec<u8>>>,
@@ -89,5 +91,39 @@ impl Image
 
         self.data = Some(ImageBuffer::from_raw(width, height, img_data.clone()).expect("Not valid data"));
         self.save_image(img_data, width, height)
+    }
+}
+
+impl Clone for Image
+{
+    fn clone(&self) -> Image
+    {
+        Image::new(self.id.clone(), self.location.clone())
+    }
+}
+
+// ================================================================================================
+// == Serde Serialization for parsing input files.                                               ==
+// ================================================================================================
+#[derive(Serialize, Deserialize)]
+struct SerializableImage {
+    name : String,
+    location : String,
+}
+
+impl Serialize for Image {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        SerializableImage { name: self.id.clone(), location: self.location.clone() }.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Image {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        Deserialize::deserialize(deserializer)
+            .map(|SerializableImage { name, location }| Image::new(name, location))
     }
 }

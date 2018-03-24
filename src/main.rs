@@ -5,6 +5,11 @@
 
 extern crate image;
 
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
+
 extern crate env_logger;
 extern crate gfx_hal as hal;
 #[cfg(feature = "dx12")]
@@ -17,8 +22,8 @@ extern crate gfx_backend_metal as back;
 extern crate glsl_to_spirv;
 
 pub mod color;
+pub mod geometry;
 pub mod filters;
-pub mod parser;
 pub mod folding;
 pub mod imaging;
 
@@ -47,4 +52,15 @@ fn main()
                                     }];
     let mut folder = <folding::FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute>>::new(images, stage_descs);
     folder.compute_stage(0usize).expect("Could not compute");
+
+    use std::fs::File;
+    use std::io::Write;
+    let mut machine_out = File::create("resources/test_machine_file.json").unwrap();
+    serde_json::to_writer_pretty(machine_out, &folder);
+}
+
+#[cfg(not(any(feature = "vulkan", feature = "dx12", feature = "metal")))]
+fn main()
+{
+
 }

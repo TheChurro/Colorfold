@@ -3,7 +3,21 @@ use std::f32::EPSILON;
 use std::f32::consts::PI;
 use std::f32::consts::FRAC_PI_2;
 
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
+
+#[derive(Clone)]
 pub struct Color(pub u8, pub u8, pub u8);
+
+#[derive(Serialize, Deserialize)]
+pub enum ColorProperties
+{
+    Hue,
+    Value,
+    Saturation,
+    Red,
+    Green,
+    Blue
+}
 
 fn max(a:f32, b:f32) -> f32
 {
@@ -127,5 +141,32 @@ impl Color
 
             (axis.0 * sin_half, axis.1 * sin_half, axis.2 * sin_half, angle_half.cos())
         }
+    }
+}
+
+// ================================================================================================
+// == Serde Serialization for parsing input files.                                               ==
+// ================================================================================================
+#[derive(Serialize, Deserialize)]
+struct SerializableColor {
+    red: u8,
+    green: u8,
+    blue: u8
+}
+
+impl Serialize for Color {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        SerializableColor { red: self.0, green: self.1, blue: self.2 }.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Color {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        Deserialize::deserialize(deserializer)
+            .map(|SerializableColor { red, green, blue }| Color(red, green, blue))
     }
 }
