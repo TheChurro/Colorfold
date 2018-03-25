@@ -8,10 +8,6 @@
 
 # TODO List
 
-- Better README
-- Testing
-  - Good examples that can be posted online
-  - Showcase of 2-image filtering capabilities.
 - Better support for scaling
   - Ratio clamp doesn't work well with black (leaves a hole)
 - More filter types
