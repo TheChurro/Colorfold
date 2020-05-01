@@ -1,18 +1,15 @@
-
 use geometry::Geom0D;
 
-use std::collections::HashSet;
 use linked_hash_set::LinkedHashSet;
+use std::collections::HashSet;
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum Summation
-{
-    InvWeighted
+pub enum Summation {
+    InvWeighted,
 }
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
-pub enum Scale
-{
+pub enum Scale {
     Clamp,
     RatioClamp,
     BezierLoose,
@@ -20,68 +17,90 @@ pub enum Scale
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-pub enum Compute
-{
-    Compute  { name : String, operations : Vec<Compute>, sum_type : Summation },
-    Rotation { start_point : Geom0D, end_point : Geom0D, source : String, rescale : Scale },
+pub enum Compute {
+    Compute {
+        name: String,
+        operations: Vec<Compute>,
+        sum_type: Summation,
+    },
+    Rotation {
+        start_point: Geom0D,
+        end_point: Geom0D,
+        source: String,
+        rescale: Scale,
+    },
 }
 
-impl Compute
-{
-    pub fn is_compute(&self) -> bool
-    {
+impl Compute {
+    pub fn is_compute(&self) -> bool {
         use filters::Compute::Compute;
-        if let &Compute {..} = self { true } else { false }
-    }
-
-    pub fn get_file(&self) -> String
-    {
-        use filters::Compute::*;
-        match self
-        {
-            &Compute { ref name , .. } => name.clone(),
-            &Rotation { ref source, .. } => source.clone()
+        if let &Compute { .. } = self {
+            true
+        } else {
+            false
         }
     }
 
-    pub fn get_required_sources(&self) -> HashSet<String>
-    {
+    pub fn get_file(&self) -> String {
+        use filters::Compute::*;
+        match self {
+            &Compute { ref name, .. } => name.clone(),
+            &Rotation { ref source, .. } => source.clone(),
+        }
+    }
+
+    pub fn get_required_sources(&self) -> HashSet<String> {
         use filters::Compute::*;
         let mut sources = HashSet::new();
-        match self
-        {
-            &Compute  { name:ref _name, ref operations, sum_type:ref _sum_type } =>
-            {
-                for op in operations
-                {
+        match self {
+            &Compute {
+                name: ref _name,
+                ref operations,
+                sum_type: ref _sum_type,
+            } => {
+                for op in operations {
                     sources = sources.union(&op.get_required_sources()).cloned().collect();
                 }
-            },
-            &Rotation { ref start_point, ref end_point, ref source, rescale:ref _rescale } =>
-            {
+            }
+            &Rotation {
+                ref start_point,
+                ref end_point,
+                ref source,
+                rescale: ref _rescale,
+            } => {
                 sources.insert(source.clone());
-                sources = sources.union(&start_point.get_required_sources()).cloned().collect();
-                sources = sources.union(&end_point.get_required_sources()).cloned().collect();
+                sources = sources
+                    .union(&start_point.get_required_sources())
+                    .cloned()
+                    .collect();
+                sources = sources
+                    .union(&end_point.get_required_sources())
+                    .cloned()
+                    .collect();
             }
         }
         sources
     }
 
-    pub fn get_params(&self) -> LinkedHashSet<String>
-    {
+    pub fn get_params(&self) -> LinkedHashSet<String> {
         use filters::Compute::*;
         let mut sources = LinkedHashSet::new();
-        match self
-        {
-            &Compute  { name:ref _name, ref operations, sum_type:ref _sum_type } =>
-            {
-                for op in operations
-                {
+        match self {
+            &Compute {
+                name: ref _name,
+                ref operations,
+                sum_type: ref _sum_type,
+            } => {
+                for op in operations {
                     sources = sources.union(&op.get_params()).cloned().collect();
                 }
-            },
-            &Rotation { ref start_point, ref end_point, ref source, rescale:ref _rescale } =>
-            {
+            }
+            &Rotation {
+                ref start_point,
+                ref end_point,
+                ref source,
+                rescale: ref _rescale,
+            } => {
                 sources.insert(source.clone());
                 sources = sources.union(&start_point.get_params()).cloned().collect();
                 sources = sources.union(&end_point.get_params()).cloned().collect();
@@ -94,8 +113,7 @@ impl Compute
     // The first string is the line to call this compute shader
     // The rest of the items are fully written out definitions for required compute shaders.
     // Print these in inverse order.
-    pub fn get_shader(&self) -> Vec<String>
-    {
+    pub fn get_shader(&self) -> Vec<String> {
         use filters::Compute::*;
         match self
         {

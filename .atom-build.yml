@@ -1,2 +1,7 @@
 cmd:  cargo build --features metal && cargo run --features metal
 name: Build and Run
+targets:
+  format:
+    cmd:    cargo fmt
+    sh:     true
+    keymap: cmd-alt-f
