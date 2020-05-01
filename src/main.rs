@@ -37,9 +37,16 @@ fn main()
     use std::fs::File;
     use std::env;
 
+    let mut output_vdmx_shader = false;
+
     // Get command line arguments (excluding the program name)
     for arg in env::args().skip(1)
     {
+        if arg == "--vdmx_out"
+        {
+            output_vdmx_shader = true;
+            continue;
+        }
         println!("Running folding machine at {}", arg);
         if let Ok(mut input) = File::open(arg)
         {
@@ -48,10 +55,17 @@ fn main()
                 Ok(folder)  =>
                 {
                     let mut folder : FoldingMachine<<back::Instance as hal::Instance>::Backend, hal::Compute> = folder;
-                    match folder.compute_stage(0usize)
+                    if output_vdmx_shader
                     {
-                        Ok(()) => { println!("Completed!"); },
-                        Err(x) => { println!("Compute Err: {}", x); }
+                        folder.vdmx_shader(0usize, true);
+                    }
+                    else
+                    {
+                        match folder.compute_stage(0usize)
+                        {
+                            Ok(()) => { println!("Completed!"); },
+                            Err(x) => { println!("Compute Err: {}", x); }
+                        }
                     }
                 },
                 Err(x) => { println!("Error: Malformed input file! {}", x); }
