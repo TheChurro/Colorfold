@@ -128,7 +128,7 @@ struct SerializableFoldingMachine {
     images: HashMap<String, Image>,
 }
 
-impl Serialize for FoldingMachine{
+impl Serialize for FoldingMachine {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -141,14 +141,15 @@ impl Serialize for FoldingMachine{
     }
 }
 
-impl<'de> Deserialize<'de>
-    for FoldingMachine
-{
+impl<'de> Deserialize<'de> for FoldingMachine {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        Deserialize::deserialize(deserializer)
-            .map(|SerializableFoldingMachine { stages, images }| FoldingMachine::from_map(images, stages))
+        Deserialize::deserialize(deserializer).map(
+            |SerializableFoldingMachine { stages, images }| {
+                FoldingMachine::from_map(images, stages)
+            },
+        )
     }
 }
