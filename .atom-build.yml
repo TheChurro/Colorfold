@@ -1,4 +1,4 @@
-cmd:  cargo build --features metal && cargo run --features metal
+cmd:  cargo build && cargo run
 name: Build and Run
 targets:
   format:

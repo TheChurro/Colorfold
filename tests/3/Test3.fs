@@ -7,15 +7,17 @@
     ],
     "INPUTS": [
 
-        {
-            "NAME" : "Color_img",
-            "TYPE" : "image"
-        },
+            {
+                "NAME" : "Light_img",
+                "LABEL" : "Image Light",
+                "TYPE" : "image"
+            },
 
-        {
-            "NAME" : "Light_img",
-            "TYPE" : "image"
-        }]}*/
+            {
+                "NAME" : "Color_img",
+                "LABEL" : "Image Color",
+                "TYPE" : "image"
+            }]}*/
 // Color conversion code from
 // http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
 
@@ -45,12 +47,12 @@ vec3 hsv2rgb(vec3 c)
 
 #define M_PI 3.1415926535897932384626433832795
 
-vec3 hsv2half_spherical(vec3 color)
+vec4 hsv2half_spherical(vec3 color)
 {
-  float sat_angle = color.y * M_PI / 2;
-  float hue_angle = color.x * 2 * M_PI;
+  float sat_angle = color.y * M_PI / 2.0;
+  float hue_angle = color.x * 2.0 * M_PI;
   vec3 hue_sat = vec3(sin(sat_angle) * vec2(cos(hue_angle), sin(hue_angle)), cos(sat_angle));
-  return vec3(color.z * hue_sat);
+  return vec4(color.z * hue_sat, 0.0);
 }
 
 vec3 half_spherical2hsv(vec3 color)
@@ -60,10 +62,10 @@ vec3 half_spherical2hsv(vec3 color)
 
   if (hue_angle < 0.0)
   {
-    hue_angle += 2 * M_PI;
+    hue_angle += 2.0 * M_PI;
   }
 
-  return vec3(hue_angle / (2 * M_PI), sat_angle * 2 / M_PI, length(color));
+  return vec3(hue_angle / (2.0 * M_PI), sat_angle * 2.0 / M_PI, length(color));
 }
 
 // ====================================================================
@@ -77,7 +79,7 @@ const float Epsilon = 0.0000001;
  */
 vec4 get_axis_angle_quat(vec3 axis, float angle)
 {
-  return vec4(sin(angle / 2) * axis, cos(angle / 2));
+  return vec4(sin(angle / 2.0) * axis, cos(angle / 2.0));
 }
 
 /**
@@ -100,7 +102,7 @@ vec4 get_rotation_quat(vec3 start, vec3 end)
   axis /= length(axis);
 
   float angle = acos(dot(start, end) / (length(start) * length(end)));
-  return vec4(sin(angle / 2) * axis, cos(angle / 2));
+  return vec4(sin(angle / 2.0) * axis, cos(angle / 2.0));
 }
 
 /**
@@ -131,7 +133,7 @@ vec4 lin_interp(vec4 start_4, vec4 end_4, float percent)
  */
 vec4 lin_interp_bounded(vec4 start_4, vec4 end_4, float percent)
 {
-  if (percent < 0 || percent > 1)
+  if (percent < 0.0 || percent > 1.0)
   {
     return vec4(0, 0, 0, -1);
   }
@@ -154,7 +156,7 @@ vec4 rot_interp(vec4 start_4, vec4 end_4, float percent)
   if (length(start) <= Epsilon)
     return vec4(end * percent, 0);
   if (length(end) <= Epsilon)
-    return vec4(start * (1 - percent), 0);
+    return vec4(start * (1.0 - percent), 0);
 
   vec3 axis = cross(start, end);
   if (dot(axis, axis) < Epsilon)
@@ -180,7 +182,7 @@ vec4 rot_interp(vec4 start_4, vec4 end_4, float percent)
  */
 vec4 rot_interp_bounded(vec4 start, vec4 end, float percent)
 {
-  if (percent < 0 || percent > 1)
+  if (percent < 0.0 || percent > 1.0)
   {
     return vec4(0, 0, 0, -1);
   }
@@ -228,7 +230,7 @@ vec4 point_point(vec4 in_vec, vec4 start, vec4 end)
 vec4 Clamp(vec4 in_vec, float start, float end)
 {
   vec3 position = in_vec.xyz;
-  if (dot(position, position) > 1)
+  if (dot(position, position) > 1.0)
   {
     position /= length(position);
   }
@@ -248,7 +250,7 @@ vec4 RatioClamp(vec4 in_vec, float start, float end)
   {
     float ratio = end / start;
     vec3 scaled = in_vec.xyz * ratio;
-    if (dot(scaled, scaled) > 1)
+    if (dot(scaled, scaled) > 1.0)
     {
       scaled /= length(scaled);
     }
@@ -267,158 +269,28 @@ vec4 BezierLoose(vec4 in_vec, float start_mid, float end_mid)
   float in_len     = length(in_vec.xyz);
   if (in_len < Epsilon) return vec4(0, 0, 0, in_vec.w);
 
-  float percent    = mix(mix(0, start_mid, in_len),
-                         mix(start_mid, 1, in_len), in_len);
-  float new_length = mix(mix(0, end_mid, percent),
-                         mix(end_mid, 1, percent), percent);
+  float percent    = mix(mix(0.0, start_mid, in_len),
+                         mix(start_mid, 1.0, in_len), in_len);
+  float new_length = mix(mix(0.0, end_mid, percent),
+                         mix(end_mid, 1.0, percent), percent);
   return vec4(new_length / in_len * in_vec.xyz, in_vec.w);
 }
-vec4 Out(vec4 Color,vec4 Light_hsv)
+vec4 Out(vec3 img_Light_rgb, vec3 img_Color_rgb)
 {
+vec3 img_Light_hsv = rgb2hsv(img_Light_rgb);
+vec3 img_Color_hsv = rgb2hsv(img_Color_rgb);
+vec4 img_Color = hsv2half_spherical(img_Color_hsv);
   float total_inv_weight = 0;
   vec3 total_inv_weight_vecs = vec3(0);
   int num_zeros = 0;
   vec3 total_zeros = vec3(0);
   vec4 _rot_start_ = vec4(0);
   vec4 _rot_end_ = vec4(0);
-_rot_start_ = vec4(0.6183769, 0.22142915, 0.2987313, 0);
-_rot_end_ = rot_interp(vec4(0.5983103, 0.43992916, 0.40742576, 0), vec4(0.47044134, 0.12605438, 0.16342932, 0), (Light_hsv.z - 0.88)/(0.388 - 0.88));
+_rot_start_ = hsv2half_spherical(rgb2hsv(vec3(1, 1, 0)));
+_rot_end_ = rot_interp(hsv2half_spherical(rgb2hsv(vec3(1, 0, 0))), hsv2half_spherical(rgb2hsv(vec3(0, 1, 1))), (img_Light_hsv.z - 0)/(1 - 0));
 if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
 {
-    vec4 Color_rot = RatioClamp(point_point(Color, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
-    if (Color_rot.w > -0.5)
-    {
-        if (Color_rot.w < Epsilon)
-        {
-            num_zeros += 1;
-            total_zeros += Color_rot.xyz;
-        }
-        else
-        {
-            total_inv_weight += 1 / Color_rot.w;
-            total_inv_weight_vecs += 1 / Color_rot.w * Color_rot.xyz;
-        }
-    }
-}
-_rot_start_ = vec4(0.17138848, 0.0491449, 0.35806534, 0);
-_rot_end_ = rot_interp(vec4(0.61683834, 0.32558087, 0.3837297, 0), vec4(0.10551249, 0, 0.03039762, 0), (Light_hsv.z - 0.949)/(0 - 0.949));
-if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
-{
-    vec4 Color_rot = RatioClamp(point_point(Color, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
-    if (Color_rot.w > -0.5)
-    {
-        if (Color_rot.w < Epsilon)
-        {
-            num_zeros += 1;
-            total_zeros += Color_rot.xyz;
-        }
-        else
-        {
-            total_inv_weight += 1 / Color_rot.w;
-            total_inv_weight_vecs += 1 / Color_rot.w * Color_rot.xyz;
-        }
-    }
-}
-_rot_start_ = vec4(0.6475488, 0.13356665, 0.24720518, 0);
-_rot_end_ = rot_interp_bounded(vec4(0.64185435, 0.23007357, 0.25909594, 0), vec4(0.20166442, 0.017643385, 0.02458003, 0), (Light_hsv.z - 0.71)/(0 - 0.71));
-if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
-{
-    vec4 Color_rot = RatioClamp(point_point(Color, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
-    if (Color_rot.w > -0.5)
-    {
-        if (Color_rot.w < Epsilon)
-        {
-            num_zeros += 1;
-            total_zeros += Color_rot.xyz;
-        }
-        else
-        {
-            total_inv_weight += 1 / Color_rot.w;
-            total_inv_weight_vecs += 1 / Color_rot.w * Color_rot.xyz;
-        }
-    }
-}
-_rot_start_ = vec4(0.6475488, 0.13356665, 0.24720518, 0);
-_rot_end_ = rot_interp_bounded(vec4(0.64185435, 0.23007357, 0.25909594, 0), vec4(0.49631402, 0.51444024, 0.3227563, 0), (Light_hsv.z - 0.711)/(1 - 0.711));
-if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
-{
-    vec4 Color_rot = RatioClamp(point_point(Color, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
-    if (Color_rot.w > -0.5)
-    {
-        if (Color_rot.w < Epsilon)
-        {
-            num_zeros += 1;
-            total_zeros += Color_rot.xyz;
-        }
-        else
-        {
-            total_inv_weight += 1 / Color_rot.w;
-            total_inv_weight_vecs += 1 / Color_rot.w * Color_rot.xyz;
-        }
-    }
-}
-_rot_start_ = vec4(-0.09833946, 0.23587883, 0.061037093, 0);
-_rot_end_ = rot_interp(vec4(0.21180747, 0.02675748, 0.030695338, 0), vec4(0.25246316, 0.28988758, 0.21245694, 0), (Light_hsv.z - 0.019)/(0.589 - 0.019));
-if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
-{
-    vec4 Color_rot = RatioClamp(point_point(Color, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
-    if (Color_rot.w > -0.5)
-    {
-        if (Color_rot.w < Epsilon)
-        {
-            num_zeros += 1;
-            total_zeros += Color_rot.xyz;
-        }
-        else
-        {
-            total_inv_weight += 1 / Color_rot.w;
-            total_inv_weight_vecs += 1 / Color_rot.w * Color_rot.xyz;
-        }
-    }
-}
-_rot_start_ = vec4(-0.011845883, -0.020517675, 0.045140896, 0);
-_rot_end_ = rot_interp_bounded(vec4(0.35520726, 0.3033758, 0.73929584, 0), vec4(0.17841858, 0.05428618, 0.072248325, 0), (Light_hsv.z - 1)/(0.34117648 - 1));
-if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
-{
-    vec4 Color_rot = RatioClamp(point_point(Color, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
-    if (Color_rot.w > -0.5)
-    {
-        if (Color_rot.w < Epsilon)
-        {
-            num_zeros += 1;
-            total_zeros += Color_rot.xyz;
-        }
-        else
-        {
-            total_inv_weight += 1 / Color_rot.w;
-            total_inv_weight_vecs += 1 / Color_rot.w * Color_rot.xyz;
-        }
-    }
-}
-_rot_start_ = vec4(-0.011845883, -0.020517675, 0.045140896, 0);
-_rot_end_ = rot_interp_bounded(vec4(0, 0, 0, 0), vec4(0.17841858, 0.05428618, 0.072248325, 0), (Light_hsv.z - 0)/(0.34117648 - 0));
-if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
-{
-    vec4 Color_rot = BezierLoose(point_point(Color, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
-    if (Color_rot.w > -0.5)
-    {
-        if (Color_rot.w < Epsilon)
-        {
-            num_zeros += 1;
-            total_zeros += Color_rot.xyz;
-        }
-        else
-        {
-            total_inv_weight += 1 / Color_rot.w;
-            total_inv_weight_vecs += 1 / Color_rot.w * Color_rot.xyz;
-        }
-    }
-}
-_rot_start_ = vec4(1, 0, -0.00000004371139, 0);
-_rot_end_ = rot_interp(vec4(0.3623057, 0, 0.15007193, 0), vec4(0.48958904, 0.5114315, 0.3282564, 0), (Light_hsv.z - 0)/(1 - 0));
-if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
-{
-    vec4 Color_rot = RatioClamp(point_point(Color, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
+    vec4 Color_rot = RatioClamp(point_point(img_Color, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
     if (Color_rot.w > -0.5)
     {
         if (Color_rot.w < Epsilon)
@@ -448,14 +320,8 @@ if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
 }void main()
 {
 
-  vec4 Color_rgb = IMG_THIS_PIXEL(Color_img);
-  float Color_alpha = Color_rgb.a;
-  vec4 Color_hsv = vec4(rgb2hsv(Color_rgb.xyz), 0);
-  vec4 Color = vec4(hsv2half_spherical(Color_hsv.xyz), 0);
-  vec4 Light_rgb = IMG_THIS_PIXEL(Light_img);
-  float Light_alpha = Light_rgb.a;
-  vec4 Light_hsv = vec4(rgb2hsv(Light_rgb.xyz), 0);
-  vec4 Light = vec4(hsv2half_spherical(Light_hsv.xyz), 0);  // Convert the out_color back into rgb. Maintain alpha.
-  vec3 color_out = vec3(hsv2rgb(half_spherical2hsv(Out(Color,Light_hsv).xyz)));
+      vec3 img_Light_rgb = IMG_THIS_PIXEL(Light_img).xyz;
+      vec3 img_Color_rgb = IMG_THIS_PIXEL(Color_img).xyz;  // Convert the out_color back into rgb. Maintain alpha.
+  vec3 color_out = vec3(hsv2rgb(half_spherical2hsv(Out(img_Light_rgb, img_Color_rgb).xyz)));
   gl_FragColor = vec4(color_out, 1.0);
 }

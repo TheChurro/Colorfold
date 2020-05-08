@@ -6,14 +6,14 @@
                 Rotation(
                     start_point: Point(RGBColor(
                         red: Constant(1.0),
-                        green: Constant(0.0),
-                        blue: Constant(0.0),
+                        green: Constant(0),
+                        blue: Constant(0),
                     )),
-                    end_point: Evaluation1D(ArcSegment(
+                    end_point: Evaluation1D(Arc(
                         start: Point(RGBColor(
                             red: Constant(1.0),
-                            green: Constant(0.0),
-                            blue: Constant(0.0),
+                            green: Constant(0),
+                            blue: Constant(0),
                         )),
                         end: Point(RGBColor(
                             red: Constant(0.0),
@@ -21,37 +21,31 @@
                             blue: Constant(0.0),
                         )),
                         start_time: 0,
-                        end_time: 0.5,
-                    ), Value(ColorChannel(
-                        color_source: ImageRef( image_source: "Color" ),
-                        channel: Saturation,
-                    ))),
+                        end_time: 1,
+                    ), Value(FloatRef("red"))),
                     source: "Color",
                     rescale: RatioClamp,
                 ),
                 Rotation(
                     start_point: Point(RGBColor(
-                        red: Constant(1.0),
+                        red: Constant(0.0),
                         green: Constant(0.0),
-                        blue: Constant(0.0),
+                        blue: Constant(1.0),
                     )),
-                    end_point: Evaluation1D(ArcSegment(
+                    end_point: Evaluation1D(Arc(
                         start: Point(RGBColor(
-                            red: Constant(0.0),
+                            red: Constant(0),
                             green: Constant(0.0),
                             blue: Constant(1.0),
                         )),
                         end: Point(RGBColor(
-                            red: Constant(0.0),
+                            red: Constant(0),
                             green: Constant(1.0),
                             blue: Constant(0.0),
                         )),
-                        start_time: 1,
-                        end_time: 0.5,
-                    ), Value(ColorChannel(
-                        color_source: ImageRef( image_source: "Color" ),
-                        channel: Saturation,
-                    ))),
+                        start_time: 0,
+                        end_time: 1,
+                    ), Value(FloatRef("blue"))),
                     source: "Color",
                     rescale: RatioClamp,
                 ),

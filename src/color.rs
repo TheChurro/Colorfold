@@ -7,7 +7,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 #[derive(Clone)]
 pub struct Color(pub u8, pub u8, pub u8);
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub enum ColorProperties {
     Hue,
     Value,

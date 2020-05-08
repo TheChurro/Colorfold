@@ -16,14 +16,15 @@
 //!   - Spheres
 //!
 
-use color::{Color, ColorProperties};
+use data::{ColorData, FloatData};
+use dependency::DataDependencyGraph;
 
 /// Geom0D represent objects which are points. Geom0D may be specific points on higher dimensional
 /// objects such as lines, circles, planes, etc. which are obtained deterministically by some
 /// evaluation technique.
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Geom0D {
-    Point(Color),
+    Point(ColorData),
     Evaluation1D(Box<Geom1D>, GeomEvalTechnique1D),
 }
 
@@ -74,10 +75,7 @@ pub enum Geom1D {
 pub enum GeomEvalTechnique1D {
     /// ColorProp represents using the underlying function of a Geom1D object to find the point. It
     /// uses a particular color property of a given source image to compute this.
-    ColorProp {
-        source: String,
-        property: ColorProperties,
-    },
+    Value(FloatData),
     // /// NearestPoint returns the closest point on a Geom1D object to the color in the source image
     // /// TODO: Implement this
     // NearestPoint { source : String }
@@ -94,68 +92,31 @@ pub enum GeomEvalTechnique1D {
 //
 // }
 
-use linked_hash_set::LinkedHashSet;
-use std::collections::HashSet;
-
 impl Geom0D {
     /// Shader generation code for Geom0D objects
     pub fn get_shader(&self) -> String {
         use geometry::Geom0D::*;
         match self {
-            &Point(ref c) => {
-                let (x, y, z) = c.to_hsv_vec();
-                format!("vec4({}, {}, {}, 0)", x, y, z)
-            }
+            &Point(ref c) => format!("{}", c.hsv_spherical_vec()),
             &Evaluation1D(ref geom, ref evaluation_technique) => {
                 evaluation_technique.get_shader(geom)
             }
         }
     }
 
-    pub fn get_required_sources(&self) -> HashSet<String> {
+    pub fn get_required_sources(&self, graph: &mut DataDependencyGraph) {
         use geometry::Geom0D::*;
-        let mut set = HashSet::new();
 
         match self {
             &Evaluation1D(ref geom, ref evaluation_technique) => {
                 use geometry::GeomEvalTechnique1D::*;
                 match evaluation_technique {
-                    &ColorProp {
-                        ref source,
-                        property: ref _property,
-                    } => {
-                        set.insert(source.clone());
-                    }
+                    &Value(ref data) => data.get_required_sources(graph),
                 }
-                set = set.union(&geom.get_required_sources()).cloned().collect();
+                geom.get_required_sources(graph)
             }
-            _ => {}
+            &Point(ref data) => data.get_required_sources(graph),
         }
-
-        set
-    }
-
-    pub fn get_params(&self) -> LinkedHashSet<String> {
-        use geometry::Geom0D::*;
-        let mut set = LinkedHashSet::new();
-
-        match self {
-            &Evaluation1D(ref geom, ref evaluation_technique) => {
-                use geometry::GeomEvalTechnique1D::*;
-                match evaluation_technique {
-                    &ColorProp {
-                        ref source,
-                        ref property,
-                    } => {
-                        set.insert(format!("{}_{}", source, property.get_color_space()));
-                    }
-                }
-                set = set.union(&geom.get_params()).cloned().collect();
-            }
-            _ => {}
-        }
-
-        set
     }
 }
 
@@ -165,10 +126,7 @@ impl GeomEvalTechnique1D {
         use geometry::GeomEvalTechnique1D::*;
 
         match self {
-            &ColorProp {
-                ref source,
-                ref property,
-            } => (*geom).get_shader(format!("{}_{}", source, property.suffix())),
+            &Value(ref data) => (*geom).get_shader(data.reference_string()),
         }
     }
 }
@@ -237,97 +195,34 @@ impl Geom1D {
         }
     }
 
-    pub fn get_required_sources(&self) -> HashSet<String> {
+    pub fn get_required_sources(&self, graph: &mut DataDependencyGraph) {
         use geometry::Geom1D::*;
 
         match self {
             &Line {
-                ref start,
-                ref end,
-                start_time: ref _start_time,
-                end_time: ref _end_time,
-            } => start
-                .get_required_sources()
-                .union(&end.get_required_sources())
-                .cloned()
-                .collect(),
+                ref start, ref end, ..
+            } => {
+                start.get_required_sources(graph);
+                end.get_required_sources(graph);
+            }
             &LineSegment {
-                ref start,
-                ref end,
-                start_time: ref _start_time,
-                end_time: ref _end_time,
-            } => start
-                .get_required_sources()
-                .union(&end.get_required_sources())
-                .cloned()
-                .collect(),
+                ref start, ref end, ..
+            } => {
+                start.get_required_sources(graph);
+                end.get_required_sources(graph);
+            }
             &Arc {
-                ref start,
-                ref end,
-                start_time: ref _start_time,
-                end_time: ref _end_time,
-            } => start
-                .get_required_sources()
-                .union(&end.get_required_sources())
-                .cloned()
-                .collect(),
+                ref start, ref end, ..
+            } => {
+                start.get_required_sources(graph);
+                end.get_required_sources(graph);
+            }
             &ArcSegment {
-                ref start,
-                ref end,
-                start_time: ref _start_time,
-                end_time: ref _end_time,
-            } => start
-                .get_required_sources()
-                .union(&end.get_required_sources())
-                .cloned()
-                .collect(),
-        }
-    }
-
-    pub fn get_params(&self) -> LinkedHashSet<String> {
-        use geometry::Geom1D::*;
-
-        match self {
-            &Line {
-                ref start,
-                ref end,
-                start_time: ref _start_time,
-                end_time: ref _end_time,
-            } => start
-                .get_params()
-                .union(&end.get_params())
-                .cloned()
-                .collect(),
-            &LineSegment {
-                ref start,
-                ref end,
-                start_time: ref _start_time,
-                end_time: ref _end_time,
-            } => start
-                .get_params()
-                .union(&end.get_params())
-                .cloned()
-                .collect(),
-            &Arc {
-                ref start,
-                ref end,
-                start_time: ref _start_time,
-                end_time: ref _end_time,
-            } => start
-                .get_params()
-                .union(&end.get_params())
-                .cloned()
-                .collect(),
-            &ArcSegment {
-                ref start,
-                ref end,
-                start_time: ref _start_time,
-                end_time: ref _end_time,
-            } => start
-                .get_params()
-                .union(&end.get_params())
-                .cloned()
-                .collect(),
+                ref start, ref end, ..
+            } => {
+                start.get_required_sources(graph);
+                end.get_required_sources(graph);
+            }
         }
     }
 }

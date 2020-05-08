@@ -4,69 +4,59 @@
             name: "Out",
             operations: [
                 Rotation(
-                    start_point: Point((
-                        red: 255,
-                        green: 0,
-                        blue: 0,
+                    start_point: Point(RGBColor(
+                        red: Constant(1.0),
+                        green: Constant(0),
+                        blue: Constant(0),
                     )),
                     end_point: Evaluation1D(Arc(
-                        start: Point((
-                            red: 0,
-                            green: 0,
-                            blue: 0,
+                        start: Point(RGBColor(
+                            red: Constant(1.0),
+                            green: Constant(0),
+                            blue: Constant(0),
                         )),
-                        end: Point((
-                            red: 255,
-                            green: 0,
-                            blue: 255,
+                        end: Point(RGBColor(
+                            red: Constant(1.0),
+                            green: Constant(0),
+                            blue: Constant(1.0),
                         )),
                         start_time: 0,
                         end_time: 1,
-                    ), ColorProp(
-                        source: "Color",
-                        property: Red,
-                    )),
+                    ), Value(ColorChannel(
+                        color_source: ImageRef( image_source: "Color" ),
+                        channel: Red,
+                    ))),
                     source: "Color",
                     rescale: RatioClamp,
                 ),
                 Rotation(
-                    start_point: Point((
-                        red: 0,
-                        green: 255,
-                        blue: 0,
+                    start_point: Point(RGBColor(
+                        red: Constant(0.0),
+                        green: Constant(1.0),
+                        blue: Constant(0.0),
                     )),
                     end_point: Evaluation1D(Arc(
-                        start: Point((
-                            red: 0,
-                            green: 255,
-                            blue: 0,
+                        start: Point(RGBColor(
+                            red: Constant(0),
+                            green: Constant(1.0),
+                            blue: Constant(0.0),
                         )),
-                        end: Point((
-                            red: 0,
-                            green: 255,
-                            blue: 255,
+                        end: Point(RGBColor(
+                            red: Constant(0),
+                            green: Constant(1.0),
+                            blue: Constant(1.0),
                         )),
                         start_time: 0,
                         end_time: 1,
-                    ), ColorProp(
-                        source: "Color",
-                        property: Green,
-                    )),
+                    ), Value(ColorChannel(
+                        color_source: ImageRef( image_source: "Color"),
+                        channel: Green,
+                    ))),
                     source: "Color",
                     rescale: RatioClamp,
                 ),
             ],
             sum_type: InvWeighted,
         ),
-    ],
-    images: {
-        "Out": (
-            name: "Out",
-            location: "tests/1/Out.png",
-        ),
-        "Color": (
-            name: "Color",
-            location: "tests/1/Flower.jpg",
-        ),
-    },
+    ]
 )

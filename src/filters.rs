@@ -1,7 +1,6 @@
+use dependency::DataDependencyGraph;
+use data::ColorData;
 use geometry::Geom0D;
-
-use linked_hash_set::LinkedHashSet;
-use std::collections::HashSet;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum Summation {
@@ -49,64 +48,25 @@ impl Compute {
         }
     }
 
-    pub fn get_required_sources(&self) -> HashSet<String> {
+    pub fn get_required_sources(&self, graph: &mut DataDependencyGraph) {
         use filters::Compute::*;
-        let mut sources = HashSet::new();
         match self {
-            &Compute {
-                name: ref _name,
-                ref operations,
-                sum_type: ref _sum_type,
-            } => {
+            &Compute { ref operations, .. } => {
                 for op in operations {
-                    sources = sources.union(&op.get_required_sources()).cloned().collect();
+                    op.get_required_sources(graph)
                 }
             }
             &Rotation {
                 ref start_point,
                 ref end_point,
                 ref source,
-                rescale: ref _rescale,
+                ..
             } => {
-                sources.insert(source.clone());
-                sources = sources
-                    .union(&start_point.get_required_sources())
-                    .cloned()
-                    .collect();
-                sources = sources
-                    .union(&end_point.get_required_sources())
-                    .cloned()
-                    .collect();
+                start_point.get_required_sources(graph);
+                end_point.get_required_sources(graph);
+                graph.require_image(source.clone());
             }
         }
-        sources
-    }
-
-    pub fn get_params(&self) -> LinkedHashSet<String> {
-        use filters::Compute::*;
-        let mut sources = LinkedHashSet::new();
-        match self {
-            &Compute {
-                name: ref _name,
-                ref operations,
-                sum_type: ref _sum_type,
-            } => {
-                for op in operations {
-                    sources = sources.union(&op.get_params()).cloned().collect();
-                }
-            }
-            &Rotation {
-                ref start_point,
-                ref end_point,
-                ref source,
-                rescale: ref _rescale,
-            } => {
-                sources.insert(source.clone());
-                sources = sources.union(&start_point.get_params()).cloned().collect();
-                sources = sources.union(&end_point.get_params()).cloned().collect();
-            }
-        }
-        sources
     }
 
     // Return a list of strings.
@@ -119,25 +79,55 @@ impl Compute {
         {
             &Compute  { ref name, ref operations, sum_type:ref _sum_type } =>
             {
-                let params = self.get_params();
+                let mut params = DataDependencyGraph::new();
+                self.get_required_sources(&mut params);
                 let mut call_line = format!("{name}(", name=name);
                 let mut function_def = format!("vec4 {name}(", name=name);
-                for (i, param) in params.iter().enumerate()
+                let mut initialization = String::new();
+                for (i, (source, usages)) in params.iter().enumerate()
                 {
-                    if i == 0
-                    {
-                        function_def = format!("{function_def}vec4 {param}", function_def=function_def, param=param);
-                        call_line = format!("{call_line}{param}", call_line=call_line, param=param);
-                    }
-                    else
-                    {
-                        function_def = format!("{function_def},vec4 {param}", function_def=function_def, param=param);
-                        call_line = format!("{call_line},{param}", call_line=call_line, param=param);
+                    if i != 0 {
+                        function_def = format!("{function_def}, ", function_def=function_def);
+                        call_line = format!("{call_line}, ", call_line=call_line);
                     }
 
+                    use data::{DataSourceKind::*};
+                    function_def = format!(
+                        "{function_def}{param}",
+                        function_def=function_def,
+                        param=match source.kind {
+                            Color => format!("vec3 col_{}_rgb", source.name),
+                            Image => format!("vec3 img_{}_rgb", source.name),
+                            Float => format!("float float_{}", source.name),
+                        }
+                    );
+                    call_line = format!(
+                        "{call_line}{param}",
+                        call_line=call_line,
+                        param=match source.kind {
+                            Color => format!("col_{}_rgb", source.name),
+                            Image => format!("img_{}_rgb", source.name),
+                            Float => format!("float_{}", source.name),
+                        }
+                    );
+
+                    let kind_string = if source.kind == Color { "col" } else { "img" };
+                    if usages.require_hsv || usages.require_point {
+                        initialization = format!("{initialization}\nvec3 {kind_string}_{name}_hsv = rgb2hsv({kind_string}_{name}_rgb);",
+                        initialization=initialization,
+                        kind_string=kind_string,
+                        name=source.name);
+                    }
+                    if usages.require_point {
+                        initialization = format!("{initialization}\nvec4 {kind_string}_{name} = hsv2half_spherical({kind_string}_{name}_hsv);",
+                        initialization=initialization,
+                        kind_string=kind_string,
+                        name=source.name);
+                    }
                 }
-                function_def += ")
-{
+                function_def += ")\n{";
+                function_def += &initialization;
+                function_def += "
   float total_inv_weight = 0;
   vec3 total_inv_weight_vecs = vec3(0);
   int num_zeros = 0;
@@ -212,7 +202,7 @@ _rot_start_ = {start};
 _rot_end_ = {end};
 if (_rot_start_.w > -0.5 && _rot_end_.w > -0.5)
 {{
-    vec4 {source}_rot = {rescale:?}(point_point({source}, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
+    vec4 {source}_rot = {rescale:?}(point_point(img_{source}, _rot_start_, _rot_end_), length(_rot_start_.xyz), length(_rot_end_.xyz));
     if ({source}_rot.w > -0.5)
     {{
         if ({source}_rot.w < Epsilon)

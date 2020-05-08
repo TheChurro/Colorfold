@@ -7,10 +7,11 @@ extern crate serde_json;
 
 extern crate env_logger;
 
-#[macro_use]
 extern crate structopt;
 
 pub mod color;
+pub mod data;
+pub mod dependency;
 pub mod filters;
 pub mod folding;
 pub mod geometry;
@@ -59,7 +60,7 @@ fn main() {
                     }
                 }
             };
-            if let Err(e) = folder.vdmx_shader(0usize, true) {
+            if let Err(e) = folder.with_location(file.clone()).vdmx_shader(0usize, true) {
                 println!("Failed to save shader {:#?} due to error {}", &file, e);
             }
         } else {

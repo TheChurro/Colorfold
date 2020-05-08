@@ -1,0 +1,30 @@
+(
+    stages: [
+        Compute(
+            name: "Out",
+            operations: [
+                Rotation(
+                    start_point: Point(HSVColor(
+                        hue: FloatRef("hue"),
+                        saturation: Constant(1.0),
+                        value: FloatRef("value"),
+                    )),
+                    end_point: Point(RGBColor(
+                            red: Constant(0.0),
+                            green: Constant(1.0),
+                            blue: Constant(0.0),
+                    )),
+                    source: "Color",
+                    rescale: BezierLoose,
+                ),
+                Rotation(
+                    start_point: Point(RGBColor(red: Constant(1.0), blue: Constant(1.0), green: Constant(1.0))),
+                    end_point: Point(ColorRef( color_source: "white")),
+                    source: "Color",
+                    rescale: RatioClamp
+                )
+            ],
+            sum_type: InvWeighted,
+        ),
+    ]
+)

@@ -4,43 +4,33 @@
             name: "Out",
             operations: [
                 Rotation(
-                    start_point: Point((
-                        red: 255,
-                        green: 255,
-                        blue: 0,
+                    start_point: Point(RGBColor(
+                        red: Constant(1.0),
+                        green: Constant(1.0),
+                        blue: Constant(0.0),
                     )),
                     end_point: Evaluation1D(Arc(
-                        start: Point((
-                            red: 255,
-                            green: 0,
-                            blue: 0,
+                        start: Point(RGBColor(
+                            red: Constant(1.0),
+                            green: Constant(0.0),
+                            blue: Constant(0.0),
                         )),
-                        end: Point((
-                            red: 0,
-                            green: 255,
-                            blue: 255,
+                        end: Point(RGBColor(
+                            red: Constant(0.0),
+                            green: Constant(1.0),
+                            blue: Constant(1.0),
                         )),
                         start_time: 0,
                         end_time: 1,
-                    ), ColorProp(
-                        source: "Color",
-                        property: Value,
-                    )),
+                    ), Value(ColorChannel(
+                        color_source: ImageRef( image_source: "Light"),
+                        channel: Value,
+                    ))),
                     source: "Color",
                     rescale: RatioClamp,
                 ),
             ],
             sum_type: InvWeighted,
         ),
-    ],
-    images: {
-        "Color": (
-            name: "Color",
-            location: "tests/3/Color.jpg",
-        ),
-        "Out": (
-            name: "Out",
-            location: "tests/3/Out.png",
-        ),
-    },
+    ]
 )
