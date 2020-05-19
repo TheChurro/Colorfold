@@ -1,11 +1,9 @@
-use data::{DataSource, DataSourceKind};
+use data::DataSourceKind;
 use dependency::DataDependencyGraph;
 use filters::Compute as ComputeShader;
-use imaging::Image;
-use std::collections::HashMap;
 use std::path::PathBuf;
 
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 
 /**
  * Struct which holds the compute shading state
@@ -17,21 +15,6 @@ pub struct FoldingMachine {
 }
 
 impl FoldingMachine {
-    // pub fn new(image_vec: Vec<(String, String)>, stages: Vec<ComputeShader>) -> FoldingMachine {
-    //     let mut images = HashMap::new();
-    //     for (name, location) in image_vec {
-    //         images.insert(name.clone(), Image::new(name.clone(), location.clone()));
-    //     }
-    //
-    //     // TODO:Ensure that stages does not have any color sources outside of images
-    //     FoldingMachine { stages, images }
-    // }
-    //
-    // pub fn from_map(images: HashMap<String, Image>, stages: Vec<ComputeShader>) -> FoldingMachine {
-    //     // TODO:Ensure that stages does not have any color sources outside of images
-    //     FoldingMachine { stages, images }
-    // }
-
     pub fn with_location(mut self, p: PathBuf) -> Self {
         self.location = Some(p);
         self
@@ -151,7 +134,6 @@ impl FoldingMachine {
         }
         let shader = shader_heading + &include_str!("../shaders/lib.fs") + &shading_str;
         if save {
-            let out_name = stage.get_file();
             if let &Some(ref path) = &self.location {
                 std::fs::write(path.with_extension("fs"), &shader)?;
             }

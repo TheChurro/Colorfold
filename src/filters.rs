@@ -1,5 +1,4 @@
 use dependency::DataDependencyGraph;
-use data::ColorData;
 use geometry::Geom0D;
 
 #[derive(Clone, Serialize, Deserialize)]

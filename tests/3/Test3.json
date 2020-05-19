@@ -1,0 +1,86 @@
+{
+  "stages": [
+    {
+      "Compute": {
+        "name": "Out",
+        "operations": [
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "RGBColor": {
+                    "red": {
+                      "Constant": 1.0
+                    },
+                    "green": {
+                      "Constant": 1.0
+                    },
+                    "blue": {
+                      "Constant": 0.0
+                    }
+                  }
+                }
+              },
+              "end_point": {
+                "Evaluation1D": [
+                  {
+                    "Arc": {
+                      "start": {
+                        "Point": {
+                          "RGBColor": {
+                            "red": {
+                              "Constant": 1.0
+                            },
+                            "green": {
+                              "Constant": 0.0
+                            },
+                            "blue": {
+                              "Constant": 0.0
+                            }
+                          }
+                        }
+                      },
+                      "end": {
+                        "Point": {
+                          "RGBColor": {
+                            "red": {
+                              "Constant": 0.0
+                            },
+                            "green": {
+                              "Constant": 1.0
+                            },
+                            "blue": {
+                              "Constant": 1.0
+                            }
+                          }
+                        }
+                      },
+                      "start_time": 0.0,
+                      "end_time": 1.0
+                    }
+                  },
+                  {
+                    "Value": {
+                      "ColorChannel": {
+                        "color_source": {
+                          "ImageRef": {
+                            "image_source": "Light"
+                          }
+                        },
+                        "channel": "Value"
+                      }
+                    }
+                  }
+                ]
+              },
+              "source": "Color",
+              "rescale": "RatioClamp"
+            }
+          }
+        ],
+        "sum_type": "InvWeighted"
+      }
+    }
+  ],
+  "location": null
+}

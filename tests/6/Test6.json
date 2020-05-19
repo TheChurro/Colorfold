@@ -1,0 +1,82 @@
+{
+  "stages": [
+    {
+      "Compute": {
+        "name": "Out",
+        "operations": [
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "RGBColor": {
+                    "red": {
+                      "ColorChannel": {
+                        "color_source": {
+                          "ImageRef": {
+                            "image_source": "target"
+                          }
+                        },
+                        "channel": "Hue"
+                      }
+                    },
+                    "green": {
+                      "ColorChannel": {
+                        "color_source": {
+                          "ImageRef": {
+                            "image_source": "target"
+                          }
+                        },
+                        "channel": "Saturation"
+                      }
+                    },
+                    "blue": {
+                      "ColorChannel": {
+                        "color_source": {
+                          "ImageRef": {
+                            "image_source": "target"
+                          }
+                        },
+                        "channel": "Value"
+                      }
+                    }
+                  }
+                }
+              },
+              "end_point": {
+                "Point": {
+                  "ImageRef": {
+                    "image_source": "target"
+                  }
+                }
+              },
+              "source": "Color",
+              "rescale": "BezierLoose"
+            }
+          },
+          {
+            "Rotation": {
+              "start_point": {
+                "Point": {
+                  "ColorRef": {
+                    "color_source": "stable_start"
+                  }
+                }
+              },
+              "end_point": {
+                "Point": {
+                  "ColorRef": {
+                    "color_source": "stable_target"
+                  }
+                }
+              },
+              "source": "Color",
+              "rescale": "RatioClamp"
+            }
+          }
+        ],
+        "sum_type": "InvWeighted"
+      }
+    }
+  ],
+  "location": null
+}

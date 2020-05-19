@@ -26,8 +26,15 @@ use structopt::StructOpt;
     about = "Convert colorfold specifications into vdmx-compliant shaders."
 )]
 struct Args {
+    /// List of Colorfold Descriptors to turn into a fragment shader.
     #[structopt(parse(from_os_str))]
-    files: Vec<PathBuf>,
+    descriptors: Vec<PathBuf>,
+    /// List of Colorfold Descriptors to convert from RON form to JSON form.
+    #[structopt(short="j", long="to-json", parse(from_os_str))]
+    convert_to_json: Vec<PathBuf>,
+    /// List of Colorfold Descriptors to convert from JSON form to RON form.
+    #[structopt(short="r", long="to-ron", parse(from_os_str))]
+    convert_to_ron:  Vec<PathBuf>,
 }
 
 fn main() {
@@ -39,11 +46,35 @@ fn main() {
     use std::fs::File;
     let json_ext = Some(OsStr::new("json"));
 
+    for file in args.convert_to_ron {
+        if let Ok(input) = File::open(&file) {
+            if let Ok(folder) = serde_json::from_reader::<_, FoldingMachine>(input) {
+                if let Ok(ron_form) = ron::ser::to_string_pretty(&folder, Default::default()) {
+                    if let Err(e) = std::fs::write(file.with_extension("ron"), &ron_form) {
+                        println!("Failed to write {:#?} to ron!\nError: {}", &file, e);
+                    }
+                }
+            }
+        }
+    }
+
+    for file in args.convert_to_json {
+        if let Ok(input) = File::open(&file) {
+            if let Ok(folder) = ron::de::from_reader::<_, FoldingMachine>(input) {
+                if let Ok(output) = File::create(file.with_extension("json")) {
+                    if let Err(e) = serde_json::to_writer_pretty(output, &folder) {
+                        println!("Failed to write {:#?} to json!\nError: {}", &file, e);
+                    }
+                }
+            }
+        }
+    }
+
     // Get command line arguments (excluding the program name)
-    for file in args.files {
+    for file in args.descriptors {
         println!("Running folding machine at {:#?}", &file);
         if let Ok(input) = File::open(&file) {
-            let mut folder: FoldingMachine = if file.extension() == json_ext {
+            let folder: FoldingMachine = if file.extension() == json_ext {
                 match serde_json::from_reader(input) {
                     Ok(x) => x,
                     Err(e) => {
